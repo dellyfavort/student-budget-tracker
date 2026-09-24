@@ -9,6 +9,11 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+        /* RESET DASAR: Mencegah elemen keluar dari layar karena padding */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         :root {
             --primary: #2563eb;
             --danger: #ef4444;
@@ -65,12 +70,12 @@
             border-left: 4px solid var(--text-muted);
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
             text-align: left;
+            width: 100%;
         }
 
-        /* Warna khusus untuk setiap kartu statistik */
-        .stat-card:nth-child(1) { border-left-color: var(--success); } /* Pemasukan */
-        .stat-card:nth-child(2) { border-left-color: var(--danger); }  /* Pengeluaran */
-        .stat-card:nth-child(3) { border-left-color: var(--primary); } /* Saldo */
+        .stat-card:nth-child(1) { border-left-color: var(--success); }
+        .stat-card:nth-child(2) { border-left-color: var(--danger); }
+        .stat-card:nth-child(3) { border-left-color: var(--primary); }
         .stat-card.over { border-left-color: var(--danger); }
 
         .stat-card h3 {
@@ -86,6 +91,7 @@
             margin: 0;
             font-weight: 600;
             color: var(--text-main);
+            word-wrap: break-word; /* Mencegah nominal panjang merusak kartu */
         }
 
         .stat-card.over h2 { color: var(--danger); }
@@ -97,9 +103,10 @@
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
             margin-bottom: 30px;
+            width: 100%;
         }
 
-        /* Desain Tabs */
+        /* Desain Tabs Desktop */
         .tabs {
             display: flex;
             gap: 10px;
@@ -131,6 +138,10 @@
             align-items: end;
         }
 
+        .form-group {
+            width: 100%;
+        }
+
         .form-group label {
             display: block;
             font-size: 12px;
@@ -148,7 +159,6 @@
             background-color: #f8fafc;
             font-size: 14px;
             color: var(--text-main);
-            box-sizing: border-box;
             outline: none;
             transition: 0.2s;
         }
@@ -158,6 +168,7 @@
         }
 
         .btn-submit {
+            width: 100%;
             padding: 12px 24px;
             border: none;
             border-radius: 8px;
@@ -166,11 +177,12 @@
             font-weight: 600;
             font-size: 14px;
             transition: 0.2s;
-            background-color: var(--danger); /* Default form adalah pengeluaran */
+            background-color: var(--danger);
         }
         .btn-submit:hover { opacity: 0.9; }
         
         .btn-cancel { 
+            width: 100%;
             padding: 12px 24px;
             border: none;
             border-radius: 8px;
@@ -179,19 +191,23 @@
             font-size: 14px;
             background-color: var(--text-muted); 
             color: white;
-            margin-left: 5px; 
+            margin-top: 10px; /* Jarak untuk tampilan HP */
         }
 
         /* 3. Grid Tabel */
         .table-container {
             width: 100%;
             overflow-x: auto;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
 
         table {
             width: 100%;
             text-align: left;
             border-collapse: collapse;
+            min-width: 600px; /* Memaksa tabel bisa di-scroll ke samping di HP */
         }
 
         th {
@@ -227,6 +243,8 @@
             margin-right: 5px;
             font-weight: 500;
             cursor: pointer;
+            display: inline-block;
+            margin-bottom: 5px;
         }
         .btn-edit { background-color: transparent; color: var(--primary); border: 1px solid var(--primary); }
         .btn-delete { background-color: transparent; color: var(--danger); border: 1px solid var(--danger); }
@@ -241,11 +259,46 @@
             font-weight: 500;
             background-color: #f3f4f6; 
             color: #374151;
+            white-space: nowrap;
         }
 
+        /* ==========================================
+           RESPONSIVITAS UNIVERSAL UNTUK SEMUA HP
+           ========================================== */
         @media (max-width: 768px) {
-            .stats-grid { grid-template-columns: 1fr; }
-            .form-grid { grid-template-columns: 1fr; }
+            /* Kurangi jarak kosong di pinggir layar */
+            body { 
+                padding: 20px 15px; 
+            }
+            
+            /* Ubah tata letak menjadi 1 kolom penuh */
+            .stats-grid { 
+                grid-template-columns: 1fr; 
+                gap: 15px; 
+            }
+            .form-grid { 
+                grid-template-columns: 1fr; 
+                gap: 15px;
+            }
+            
+            /* Penyesuaian Ruang Dalam Form */
+            .form-container {
+                padding: 20px 15px;
+            }
+
+            /* FIX TAB: Pakai Grid 50:50 agar seimbang di semua HP */
+            .tabs {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            
+            .tab-btn {
+                width: 100%;
+                padding: 10px 5px;
+                font-size: 13px;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -276,7 +329,7 @@
         <section class="form-container">
             <div class="tabs">
                 <button type="button" class="tab-btn active-expense" id="tab-expense" onclick="switchTab('expense')">Pengeluaran</button>
-                <button type="button" class="tab-btn" id="tab-income" onclick="switchTab('income')">Pemasukan </button>
+                <button type="button" class="tab-btn" id="tab-income" onclick="switchTab('income')">Pemasukan</button>
             </div>
 
             <form id="expense-form">
@@ -296,7 +349,6 @@
                     <div class="form-group">
                         <label for="category">Kategori</label>
                         <select id="category" required>
-                            <!-- Kategori default (Pengeluaran) saat web dibuka -->
                             <option value="Makan">Makan</option>
                             <option value="Transport">Transport</option>
                             <option value="Kuota">Kuota</option>
@@ -370,7 +422,6 @@
                 btnSubmit.style.backgroundColor = 'var(--success)';
                 btnSubmit.textContent = 'Tambah Pemasukan';
                 
-                // Ubah Pilihan Kategori untuk Pemasukan
                 catSelect.innerHTML = `
                     <option value="Uang Saku">Uang Saku</option>
                     <option value="Gaji Part-time">Gaji Part-time</option>
@@ -383,7 +434,6 @@
                 btnSubmit.style.backgroundColor = 'var(--danger)';
                 btnSubmit.textContent = 'Tambah Pengeluaran';
 
-                // Ubah Pilihan Kategori untuk Pengeluaran
                 catSelect.innerHTML = `
                     <option value="Makan">Makan</option>
                     <option value="Transport">Transport</option>
@@ -411,16 +461,13 @@
                 const id = docSnap.id;
                 const expDate = data.createdAt?.toDate() || new Date();
                 
-                // Jika tipe tidak ada (data lama), anggap sebagai expense
                 const type = data.type || 'expense'; 
 
-                // Hitung total hanya untuk bulan ini
                 if (expDate.getMonth() === currentMonth) {
                     if (type === 'income') totalIncome += data.amount;
                     else totalExpense += data.amount;
                 }
 
-                // Penyesuaian Visual Tabel
                 const isIncome = type === 'income';
                 const sign = isIncome ? '+' : '-';
                 const amountClass = isIncome ? 'text-success' : 'text-danger';
@@ -439,7 +486,6 @@
                 list.appendChild(row);
             });
 
-            // Update UI Statistik
             const balance = totalIncome - totalExpense;
             
             document.getElementById('stat-income').textContent = formatRupiah(totalIncome);
@@ -482,28 +528,24 @@
         };
 
         window.editExpense = (id, desc, amount, category, type) => {
-            // Pindah tab otomatis sesuai tipe transaksi yang mau di-edit
             window.switchTab(type);
 
-            // Isi nilai form
             document.getElementById('desc').value = desc;
             document.getElementById('amount').value = amount;
             
-            // Tunggu DOM merender opsi select baru, lalu set nilainya
             setTimeout(() => {
                 document.getElementById('category').value = category;
             }, 50);
 
             document.getElementById('edit-id').value = id; 
             document.getElementById('btn-submit').textContent = 'Update Data';
-            document.getElementById('btn-cancel').style.display = 'inline-block';
+            document.getElementById('btn-cancel').style.display = 'block';
         };
 
         function resetForm() {
             document.getElementById('expense-form').reset();
             document.getElementById('edit-id').value = '';
             document.getElementById('btn-cancel').style.display = 'none';
-            // Kembalikan tombol submit ke state awal sesuai tab yang sedang aktif
             const currentType = document.getElementById('trans-type').value;
             window.switchTab(currentType); 
         }
