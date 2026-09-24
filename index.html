@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Budget Tracker</title>
+    
+    <!-- CSS Variables & Layout -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary: #2563eb;
+            --danger: #ef4444;
+            --success: #10b981;
+            --bg: #f0f4f8; 
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .app-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            color: var(--primary);
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin: 0;
+        }
+
+        /* 1. Grid Statistik (3 Kolom) */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            border-left: 4px solid var(--text-muted);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+
+        /* Warna khusus untuk setiap kartu statistik */
+        .stat-card:nth-child(1) { border-left-color: var(--success); } /* Pemasukan */
+        .stat-card:nth-child(2) { border-left-color: var(--danger); }  /* Pengeluaran */
+        .stat-card:nth-child(3) { border-left-color: var(--primary); } /* Saldo */
+        .stat-card.over { border-left-color: var(--danger); }
+
+        .stat-card h3 {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            margin: 0 0 10px 0;
+        }
+
+        .stat-card h2 {
+            font-size: 24px;
+            margin: 0;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .stat-card.over h2 { color: var(--danger); }
+
+        /* 2. Form & Tabs */
+        .form-container {
+            background-color: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        /* Desain Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 14px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .tab-btn:hover { background-color: var(--bg); }
+        .tab-btn.active-expense { background-color: #fef2f2; color: var(--danger); }
+        .tab-btn.active-income { background-color: #ecfdf5; color: var(--success); }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 20px;
+            align-items: end;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: #f8fafc;
+            font-size: 14px;
+            color: var(--text-main);
+            box-sizing: border-box;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-submit {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            transition: 0.2s;
+            background-color: var(--danger); /* Default form adalah pengeluaran */
+        }
+        .btn-submit:hover { opacity: 0.9; }
+        
+        .btn-cancel { 
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            background-color: var(--text-muted); 
+            color: white;
+            margin-left: 5px; 
+        }
+
+        /* 3. Grid Tabel */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            text-align: left;
+            border-collapse: collapse;
+        }
+
+        th {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 16px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 16px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 40px !important;
+        }
+
+        .text-success { color: var(--success); font-weight: 600; }
+        .text-danger { color: var(--danger); font-weight: 600; }
+
+        /* Desain Action Button */
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            margin-right: 5px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .btn-edit { background-color: transparent; color: var(--primary); border: 1px solid var(--primary); }
+        .btn-delete { background-color: transparent; color: var(--danger); border: 1px solid var(--danger); }
+        .btn-edit:hover { background-color: #eff6ff; }
+        .btn-delete:hover { background-color: #fef2f2; }
+
+        /* Warna Kategori */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            background-color: #f3f4f6; 
+            color: #374151;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Student Budget Tracker</h1>
+            <p>Kelola arus kas bulanan Anda dengan lebih cerdas dan terstruktur</p>
+        </header>
+
+        <!-- 1. STATISTIK SECTION (Arus Kas) -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Uang Saku (Bulan Ini)</h3>
+                <h2 id="stat-income">Rp 0</h2>
+            </div>
+            <div class="stat-card">
+                <h3>Total Pengeluaran (Bulan Ini)</h3>
+                <h2 id="stat-expense">Rp 0</h2>
+            </div>
+            <div class="stat-card" id="card-balance">
+                <h3>Saldo Saat Ini</h3>
+                <h2 id="stat-balance">Rp 0</h2>
+            </div>
+        </section>
+
+        <!-- 2. FORM SECTION DENGAN TABS -->
+        <section class="form-container">
+            <div class="tabs">
+                <button type="button" class="tab-btn active-expense" id="tab-expense" onclick="switchTab('expense')">Pengeluaran</button>
+                <button type="button" class="tab-btn" id="tab-income" onclick="switchTab('income')">Pemasukan </button>
+            </div>
+
+            <form id="expense-form">
+                <!-- Menyimpan jenis transaksi yang sedang aktif -->
+                <input type="hidden" id="trans-type" value="expense">
+                <input type="hidden" id="edit-id">
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="desc">Deskripsi</label>
+                        <input type="text" id="desc" placeholder="Cth: Makan siang di kantin" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="amount">Nominal (Rp)</label>
+                        <input type="number" id="amount" placeholder="50000" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Kategori</label>
+                        <select id="category" required>
+                            <!-- Kategori default (Pengeluaran) saat web dibuka -->
+                            <option value="Makan">Makan</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Kuota">Kuota</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button type="submit" class="btn-submit" id="btn-submit">Tambah</button>
+                        <button type="button" class="btn-cancel" id="btn-cancel" style="display: none;">Batal</button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- 3. TABLE SECTION -->
+        <section class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Deskripsi</th>
+                        <th>Kategori</th>
+                        <th>Nominal</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="expense-list">
+                    <tr>
+                        <td colspan="5" class="empty-state">Memuat data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <!-- KONFIGURASI FIREBASE & SCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPTTT8G9xSHtzF5bLpO8P3N-eoY8CjCRE",
+            authDomain: "praktik-crud-2026-4f5dc.firebaseapp.com",
+            projectId: "praktik-crud-2026-4f5dc",
+            storageBucket: "praktik-crud-2026-4f5dc.firebasestorage.app",
+            messagingSenderId: "824976350118",
+            appId: "1:824976350118:web:c72ae378bdb2cb4dbb8d67"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const expensesCollection = collection(db, "expenses");
+
+        const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+        const q = query(expensesCollection, orderBy("createdAt", "desc"));
+
+        // LOGIKA PERGANTIAN TABS & KATEGORI FORM
+        window.switchTab = (type) => {
+            const transTypeInput = document.getElementById('trans-type');
+            const tabExp = document.getElementById('tab-expense');
+            const tabInc = document.getElementById('tab-income');
+            const catSelect = document.getElementById('category');
+            const btnSubmit = document.getElementById('btn-submit');
+
+            transTypeInput.value = type;
+
+            if (type === 'income') {
+                tabInc.classList.add('active-income');
+                tabExp.classList.remove('active-expense');
+                btnSubmit.style.backgroundColor = 'var(--success)';
+                btnSubmit.textContent = 'Tambah Pemasukan';
+                
+                // Ubah Pilihan Kategori untuk Pemasukan
+                catSelect.innerHTML = `
+                    <option value="Uang Saku">Uang Saku</option>
+                    <option value="Gaji Part-time">Gaji Part-time</option>
+                    <option value="Beasiswa">Beasiswa</option>
+                    <option value="Lainnya">Lainnya</option>
+                `;
+            } else {
+                tabExp.classList.add('active-expense');
+                tabInc.classList.remove('active-income');
+                btnSubmit.style.backgroundColor = 'var(--danger)';
+                btnSubmit.textContent = 'Tambah Pengeluaran';
+
+                // Ubah Pilihan Kategori untuk Pengeluaran
+                catSelect.innerHTML = `
+                    <option value="Makan">Makan</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Kuota">Kuota</option>
+                    <option value="Lainnya">Lainnya</option>
+                `;
+            }
+        };
+
+        // READ & HITUNG STATISTIK
+        onSnapshot(q, (snapshot) => {
+            const list = document.getElementById('expense-list');
+            list.innerHTML = ''; 
+
+            let totalIncome = 0;
+            let totalExpense = 0;
+            const currentMonth = new Date().getMonth();
+
+            if (snapshot.empty) {
+                list.innerHTML = '<tr><td colspan="5" class="empty-state">Belum ada data transaksi.</td></tr>';
+            }
+
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const id = docSnap.id;
+                const expDate = data.createdAt?.toDate() || new Date();
+                
+                // Jika tipe tidak ada (data lama), anggap sebagai expense
+                const type = data.type || 'expense'; 
+
+                // Hitung total hanya untuk bulan ini
+                if (expDate.getMonth() === currentMonth) {
+                    if (type === 'income') totalIncome += data.amount;
+                    else totalExpense += data.amount;
+                }
+
+                // Penyesuaian Visual Tabel
+                const isIncome = type === 'income';
+                const sign = isIncome ? '+' : '-';
+                const amountClass = isIncome ? 'text-success' : 'text-danger';
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${expDate.toLocaleDateString('id-ID')}</td>
+                    <td>${data.description}</td>
+                    <td><span class="badge">${data.category}</span></td>
+                    <td class="${amountClass}">${sign} ${formatRupiah(data.amount)}</td>
+                    <td>
+                        <button class="action-btn btn-edit" onclick="window.editExpense('${id}', '${data.description}', ${data.amount}, '${data.category}', '${type}')">Edit</button>
+                        <button class="action-btn btn-delete" onclick="window.deleteExpense('${id}')">Hapus</button>
+                    </td>
+                `;
+                list.appendChild(row);
+            });
+
+            // Update UI Statistik
+            const balance = totalIncome - totalExpense;
+            
+            document.getElementById('stat-income').textContent = formatRupiah(totalIncome);
+            document.getElementById('stat-expense').textContent = formatRupiah(totalExpense);
+            document.getElementById('stat-balance').textContent = formatRupiah(balance);
+
+            const balanceCard = document.getElementById('card-budget');
+            if (balance < 0) balanceCard.classList.add('over');
+            else balanceCard.classList.remove('over');
+        });
+
+        // SUBMIT FORM (CREATE / UPDATE)
+        document.getElementById('expense-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const desc = document.getElementById('desc').value;
+            const amount = Number(document.getElementById('amount').value);
+            const category = document.getElementById('category').value;
+            const editId = document.getElementById('edit-id').value;
+            const transType = document.getElementById('trans-type').value;
+
+            try {
+                if (editId) {
+                    await updateDoc(doc(db, "expenses", editId), { 
+                        description: desc, amount: amount, category: category, type: transType 
+                    });
+                } else {
+                    await addDoc(expensesCollection, { 
+                        description: desc, amount: amount, category: category, type: transType, createdAt: serverTimestamp() 
+                    });
+                }
+                resetForm();
+            } catch (error) {
+                console.error("Error: ", error);
+                alert("Gagal menyimpan data.");
+            }
+        });
+
+        window.deleteExpense = async (id) => {
+            if (confirm("Yakin ingin menghapus data ini?")) await deleteDoc(doc(db, "expenses", id));
+        };
+
+        window.editExpense = (id, desc, amount, category, type) => {
+            // Pindah tab otomatis sesuai tipe transaksi yang mau di-edit
+            window.switchTab(type);
+
+            // Isi nilai form
+            document.getElementById('desc').value = desc;
+            document.getElementById('amount').value = amount;
+            
+            // Tunggu DOM merender opsi select baru, lalu set nilainya
+            setTimeout(() => {
+                document.getElementById('category').value = category;
+            }, 50);
+
+            document.getElementById('edit-id').value = id; 
+            document.getElementById('btn-submit').textContent = 'Update Data';
+            document.getElementById('btn-cancel').style.display = 'inline-block';
+        };
+
+        function resetForm() {
+            document.getElementById('expense-form').reset();
+            document.getElementById('edit-id').value = '';
+            document.getElementById('btn-cancel').style.display = 'none';
+            // Kembalikan tombol submit ke state awal sesuai tab yang sedang aktif
+            const currentType = document.getElementById('trans-type').value;
+            window.switchTab(currentType); 
+        }
+
+        document.getElementById('btn-cancel').addEventListener('click', resetForm);
+    </script>
+</body>
+</html>
